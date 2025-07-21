@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信配置診斷工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .diagnostic-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .checklist {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .checklist h4 {
+            margin-top: 0;
+        }
+        .checklist ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .checklist li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信配置診斷工具</h1>
+        
+        <div class="diagnostic-section">
+            <h3>1. 環境檢查</h3>
+            <div id="envStatus">正在檢查環境...</div>
+            <button onclick="checkEnvironment()" class="btn">重新檢查</button>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>2. AppID 驗證</h3>
+            <div class="form-group">
+                <label for="appid">請輸入您的微信 AppID：</label>
+                <input type="text" id="appid" placeholder="例如：wxe877716401fdb4c9" value="wxe877716401fdb4c9">
+            </div>
+            <button onclick="validateAppId()" class="btn">驗證 AppID</button>
+            <div id="appidResult"></div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>3. 授權 URL 測試</h3>
+            <button onclick="testAuthUrl()" class="btn">測試授權 URL</button>
+            <div id="authResult"></div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>4. 配置檢查清單</h3>
+            <div class="checklist">
+                <h4>請逐一檢查以下項目：</h4>
+                <ul>
+                    <li><strong>公眾號類型：</strong> 確認是服務號（訂閱號無法使用網頁授權）</li>
+                    <li><strong>AppID：</strong> 確認 AppID 正確且有效</li>
+                    <li><strong>網頁授權域名：</strong> 確認已配置 openid.meditechmacao.com</li>
+                    <li><strong>域名備案：</strong> 確認域名已備案（國內域名要求）</li>
+                    <li><strong>菜單配置：</strong> 確認菜單類型選擇"跳轉網頁"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>5. 常見問題解決</h3>
+            <div class="info">
+                <h4>404 錯誤的可能原因：</h4>
+                <ul>
+                    <li><strong>AppID 錯誤：</strong> 使用了錯誤的 AppID</li>
+                    <li><strong>公眾號類型：</strong> 訂閱號無法使用網頁授權</li>
+                    <li><strong>域名未配置：</strong> 網頁授權域名未正確設置</li>
+                    <li><strong>域名未備案：</strong> 國內域名需要 ICP 備案</li>
+                    <li><strong>微信服務器問題：</strong> 暫時性服務器問題</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h3>6. 替代方案</h3>
+            <div class="warning">
+                <h4>如果網頁授權無法使用，可以考慮：</h4>
+                <ul>
+                    <li>使用微信小程序（推薦）</li>
+                    <li>使用微信支付（需要企業資質）</li>
+                    <li>使用其他第三方登錄方式</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查環境
+        async function checkEnvironment() {
+            const statusDiv = document.getElementById('envStatus');
+            statusDiv.innerHTML = '正在檢查...';
+            
+            try {
+                const response = await fetch('/api/debug');
+                const data = await response.json();
+                
+                let html = '<div class="success">';
+                html += '<h4>環境檢查結果：</h4>';
+                html += `<p>API 服務：✅ 正常運行</p>`;
+                html += `<p>WECHAT_APPID：${data.env.WECHAT_APPID}</p>`;
+                html += `<p>WECHAT_SECRET：${data.env.WECHAT_SECRET}</p>`;
+                html += `<p>BASE_URL：${data.env.BASE_URL}</p>`;
+                html += `<p>時間戳：${data.timestamp}</p>`;
+                html += '</div>';
+                
+                statusDiv.innerHTML = html;
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">環境檢查失敗：${error.message}</div>`;
+            }
+        }
+
+        // 驗證 AppID
+        function validateAppId() {
+            const appId = document.getElementById('appid').value.trim();
+            const resultDiv = document.getElementById('appidResult');
+            
+            if (!appId) {
+                resultDiv.innerHTML = '<div class="error">請輸入 AppID</div>';
+                return;
+            }
+
+            // 檢查 AppID 格式
+            const appIdPattern = /^wx[a-f0-9]{16}$/;
+            if (!appIdPattern.test(appId)) {
+                resultDiv.innerHTML = '<div class="error">AppID 格式不正確，應該是以 wx 開頭的 18 位字符串</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>AppID 格式檢查：</h4>
+                    <p>✅ AppID 格式正確：${appId}</p>
+                    <p>⚠️ 注意：這只是格式檢查，無法驗證 AppID 是否有效</p>
+                </div>
+            `;
+        }
+
+        // 測試授權 URL
+        async function testAuthUrl() {
+            const appId = document.getElementById('appid').value.trim();
+            const resultDiv = document.getElementById('authResult');
+            
+            if (!appId) {
+                resultDiv.innerHTML = '<div class="error">請先輸入 AppID</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '正在生成授權 URL...';
+            
+            try {
+                const redirectUri = encodeURIComponent('https://openid.meditechmacao.com/wechat-auth');
+                const authUrl = `https://api.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_userinfo&state=test#wechat_redirect`;
+                
+                resultDiv.innerHTML = `
+                    <div class="info">
+                        <h4>生成的授權 URL：</h4>
+                        <p><a href="${authUrl}" target="_blank">點擊測試授權 URL</a></p>
+                        <textarea style="width: 100%; height: 80px;" readonly>${authUrl}</textarea>
+                        <p><strong>注意：</strong>如果點擊後顯示 404 錯誤，說明 AppID 無效或配置有問題</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">生成授權 URL 失敗：${error.message}</div>`;
+            }
+        }
+
+        // 頁面加載時自動檢查環境
+        document.addEventListener('DOMContentLoaded', checkEnvironment);
+    </script>
+</body>
+</html> 
