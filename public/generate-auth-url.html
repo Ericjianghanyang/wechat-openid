@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信授權 URL 生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .copy-btn {
+            background-color: #28a745;
+        }
+        .copy-btn:hover {
+            background-color: #218838;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信授權 URL 生成器</h1>
+        
+        <div class="instructions">
+            <h3>使用說明：</h3>
+            <ol>
+                <li>填入您的微信公眾號 AppID</li>
+                <li>設置授權完成後的跳轉地址（必須是您已配置的網頁授權域名下的地址）</li>
+                <li>點擊 "生成授權 URL"</li>
+                <li>複製生成的 URL 到微信公眾平台的自定義菜單</li>
+            </ol>
+        </div>
+
+        <div class="form-group">
+            <label for="appid">微信 AppID：</label>
+            <input type="text" id="appid" placeholder="請輸入您的微信公眾號 AppID">
+        </div>
+
+        <div class="form-group">
+            <label for="redirect_uri">跳轉地址：</label>
+            <input type="text" id="redirect_uri" value="https://openid.meditechmacao.com/wechat-auth" placeholder="授權完成後的跳轉地址">
+        </div>
+
+        <div class="form-group">
+            <label for="state">狀態參數（可選）：</label>
+            <input type="text" id="state" placeholder="可選的狀態參數">
+        </div>
+
+        <button onclick="generateAuthUrl()">生成授權 URL</button>
+        <button onclick="testAuthUrl()" class="copy-btn">測試授權 URL</button>
+
+        <div class="result" id="result" style="display: none;">
+            <h3>生成的授權 URL：</h3>
+            <textarea id="authUrl" readonly></textarea>
+            <br><br>
+            <button onclick="copyToClipboard()" class="copy-btn">複製到剪貼板</button>
+        </div>
+    </div>
+
+    <script>
+        function generateAuthUrl() {
+            const appid = document.getElementById('appid').value.trim();
+            const redirect_uri = document.getElementById('redirect_uri').value.trim();
+            const state = document.getElementById('state').value.trim();
+
+            if (!appid) {
+                alert('請輸入微信 AppID');
+                return;
+            }
+
+            if (!redirect_uri) {
+                alert('請輸入跳轉地址');
+                return;
+            }
+
+            let authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&scope=snsapi_userinfo`;
+
+            if (state) {
+                authUrl += `&state=${encodeURIComponent(state)}`;
+            }
+
+            authUrl += '#wechat_redirect';
+
+            document.getElementById('authUrl').value = authUrl;
+            document.getElementById('result').style.display = 'block';
+        }
+
+        function testAuthUrl() {
+            const authUrl = document.getElementById('authUrl').value;
+            if (authUrl) {
+                window.open(authUrl, '_blank');
+            } else {
+                alert('請先生成授權 URL');
+            }
+        }
+
+        function copyToClipboard() {
+            const authUrl = document.getElementById('authUrl');
+            authUrl.select();
+            document.execCommand('copy');
+            alert('授權 URL 已複製到剪貼板！');
+        }
+
+        // 自動填充示例
+        document.addEventListener('DOMContentLoaded', function() {
+            // 可以根據需要預設一些值
+            document.getElementById('redirect_uri').value = 'https://openid.meditechmacao.com/wechat-auth';
+        });
+    </script>
+</body>
+</html> 
