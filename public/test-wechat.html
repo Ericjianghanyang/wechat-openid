@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信授權測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信授權測試頁面</h1>
+        
+        <div class="test-section">
+            <h3>1. 環境檢查</h3>
+            <div id="envStatus">正在檢查環境...</div>
+            <button onclick="checkEnvironment()" class="btn">重新檢查</button>
+        </div>
+
+        <div class="test-section">
+            <h3>2. 微信授權 URL 測試</h3>
+            <p>點擊下面的按鈕測試微信授權 URL：</p>
+            <button onclick="testWechatAuth()" class="btn">測試微信授權</button>
+            <div id="authResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. 直接授權測試</h3>
+            <p>使用硬編碼的 AppID 進行測試：</p>
+            <button onclick="directAuth()" class="btn">直接授權</button>
+            <div id="directResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. 問題診斷</h3>
+            <div class="info">
+                <h4>可能的原因：</h4>
+                <ul>
+                    <li>網頁授權域名未正確配置</li>
+                    <li>AppID 或 AppSecret 錯誤</li>
+                    <li>微信公眾平台設置問題</li>
+                    <li>網絡連接問題</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查環境
+        async function checkEnvironment() {
+            const statusDiv = document.getElementById('envStatus');
+            statusDiv.innerHTML = '正在檢查...';
+            
+            try {
+                const response = await fetch('/api/debug');
+                const data = await response.json();
+                
+                let html = '<div class="success">';
+                html += '<h4>環境檢查結果：</h4>';
+                html += `<p>API 服務：✅ 正常運行</p>`;
+                html += `<p>WECHAT_APPID：${data.env.WECHAT_APPID}</p>`;
+                html += `<p>WECHAT_SECRET：${data.env.WECHAT_SECRET}</p>`;
+                html += `<p>BASE_URL：${data.env.BASE_URL}</p>`;
+                html += `<p>時間戳：${data.timestamp}</p>`;
+                html += '</div>';
+                
+                statusDiv.innerHTML = html;
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">環境檢查失敗：${error.message}</div>`;
+            }
+        }
+
+        // 測試微信授權
+        async function testWechatAuth() {
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.innerHTML = '正在測試...';
+            
+            try {
+                const redirectUri = encodeURIComponent('https://openid.meditechmacao.com/wechat-auth');
+                const response = await fetch(`/api/wechat/auth-url?redirect_uri=${redirectUri}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h4>授權 URL 生成成功：</h4>
+                            <p><a href="${data.data.authUrl}" target="_blank">點擊測試授權 URL</a></p>
+                            <textarea style="width: 100%; height: 60px;" readonly>${data.data.authUrl}</textarea>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">授權 URL 生成失敗：${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">測試失敗：${error.message}</div>`;
+            }
+        }
+
+        // 直接授權
+        function directAuth() {
+            const resultDiv = document.getElementById('directResult');
+            const appId = 'wxe877716401fdb4c9';
+            const redirectUri = encodeURIComponent('https://openid.meditechmacao.com/wechat-auth');
+            const authUrl = `https://api.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=snsapi_userinfo&state=test#wechat_redirect`;
+            
+            resultDiv.innerHTML = `
+                <div class="info">
+                    <h4>直接授權 URL：</h4>
+                    <p><a href="${authUrl}" target="_blank">點擊測試直接授權</a></p>
+                    <textarea style="width: 100%; height: 60px;" readonly>${authUrl}</textarea>
+                </div>
+            `;
+        }
+
+        // 頁面加載時自動檢查環境
+        document.addEventListener('DOMContentLoaded', checkEnvironment);
+    </script>
+</body>
+</html> 
