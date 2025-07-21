@@ -83,7 +83,7 @@ class WechatAuth {
     // 獲取access_token
     async getAccessToken(code) {
         try {
-            const response = await fetch(`/.netlify/functions/wechat/access-token?code=${code}`);
+            const response = await fetch(`/api/wechat/access-token?code=${code}`);
             const data = await response.json();
             return data;
         } catch (error) {
@@ -98,7 +98,7 @@ class WechatAuth {
     // 獲取用戶信息
     async getUserInfo(accessToken, openid) {
         try {
-            const response = await fetch(`/.netlify/functions/wechat/user-info?access_token=${accessToken}&openid=${openid}`);
+            const response = await fetch(`/api/wechat/user-info?access_token=${accessToken}&openid=${openid}`);
             const data = await response.json();
             return data;
         } catch (error) {
@@ -120,7 +120,7 @@ class WechatAuth {
         }
 
         try {
-            const response = await fetch(`/.netlify/functions/wechat/check-token?access_token=${this.accessToken}&openid=${this.openid}`);
+            const response = await fetch(`/api/wechat/check-token?access_token=${this.accessToken}&openid=${this.openid}`);
             const data = await response.json();
             return data;
         } catch (error) {
@@ -142,7 +142,7 @@ class WechatAuth {
         }
 
         try {
-            const response = await fetch(`/.netlify/functions/wechat/refresh-token?refresh_token=${this.refreshToken}`);
+            const response = await fetch(`/api/wechat/refresh-token?refresh_token=${this.refreshToken}`);
             const data = await response.json();
             
             if (data.success) {
