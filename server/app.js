@@ -3,7 +3,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../config/.env') });
+
+// 嘗試讀取多個位置的環境變量文件
+try {
+  require('dotenv').config({ path: path.join(__dirname, '../.env') });
+} catch (error) {
+  try {
+    require('dotenv').config({ path: path.join(__dirname, '../config/.env') });
+  } catch (error2) {
+    console.log('未找到 .env 文件，使用系統環境變量');
+  }
+}
 
 const wechatRoutes = require('./routes/wechat');
 const authRoutes = require('./routes/auth');
@@ -43,6 +53,16 @@ app.get('/', (req, res) => {
 // 微信授權頁面
 app.get('/wechat-auth', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/wechat-auth.html'));
+});
+
+// 調試路由 - 檢查環境變量
+app.get('/api/debug/env', (req, res) => {
+  res.json({
+    WECHAT_APPID: process.env.WECHAT_APPID ? '已設置' : '未設置',
+    WECHAT_SECRET: process.env.WECHAT_SECRET ? '已設置' : '未設置',
+    BASE_URL: process.env.BASE_URL || '未設置',
+    NODE_ENV: process.env.NODE_ENV || '未設置'
+  });
 });
 
 // 錯誤處理中間件
