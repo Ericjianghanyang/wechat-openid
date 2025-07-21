@@ -9,12 +9,11 @@ const wechatRoutes = require('./routes/wechat');
 const authRoutes = require('./routes/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // 安全中間件
 app.use(helmet());
 app.use(cors({
-  origin: process.env.BASE_URL || 'http://localhost:3000',
+  origin: process.env.BASE_URL || 'https://openid.meditechmacao.com',
   credentials: true
 }));
 
@@ -32,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 // 靜態文件服務
 app.use(express.static(path.join(__dirname, '../public')));
 
-// 路由
+// API 路由
 app.use('/api/wechat', wechatRoutes);
 app.use('/api/auth', authRoutes);
 
@@ -64,9 +63,5 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`服務器運行在 http://localhost:${PORT}`);
-  console.log(`微信授權頁面: http://localhost:${PORT}/wechat-auth`);
-});
-
+// Vercel 需要導出 app
 module.exports = app; 

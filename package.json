@@ -6,9 +6,8 @@
   "scripts": {
     "start": "node server/app.js",
     "dev": "nodemon server/app.js",
-    "build": "npm run build:functions",
-    "build:functions": "mkdir -p netlify/functions && cp -r server/routes netlify/functions/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "echo 'Build completed'",
+    "vercel-build": "echo 'Vercel build completed'"
   },
   "keywords": [
     "wechat",
@@ -16,7 +15,7 @@
     "oauth",
     "express",
     "nodejs",
-    "netlify"
+    "vercel"
   ],
   "author": "Your Name",
   "license": "MIT",
