@@ -1,0 +1,69 @@
+# 依賴
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 環境變量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config/.env
+
+# 日誌
+logs/
+*.log
+
+# 運行時數據
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# 覆蓋率目錄
+coverage/
+.nyc_output
+
+# 依賴目錄
+jspm_packages/
+
+# 可選npm緩存目錄
+.npm
+
+# 可選REPL歷史
+.node_repl_history
+
+# 輸出目錄
+dist/
+build/
+
+# 臨時文件
+.tmp/
+.temp/
+
+# 編輯器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系統
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 上傳文件
+uploads/
+
+# PM2
+.pm2/
+
+# 測試
+test-results/ 

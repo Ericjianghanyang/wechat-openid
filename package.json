@@ -1,0 +1,37 @@
+{
+  "name": "wechat-openid-integration",
+  "version": "1.0.0",
+  "description": "微信公眾平台OpenID集成方案",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "build": "npm run build:functions",
+    "build:functions": "mkdir -p netlify/functions && cp -r server/routes netlify/functions/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wechat",
+    "openid",
+    "oauth",
+    "express",
+    "nodejs",
+    "netlify"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+} 

@@ -1,0 +1,31 @@
+[build]
+  # 構建命令
+  command = "npm run build"
+  # 發布目錄
+  publish = "public"
+  # 函數目錄
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# 重定向規則
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# 處理 SPA 路由
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 安全頭部
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin" 
