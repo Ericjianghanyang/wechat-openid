@@ -72,6 +72,13 @@
             border-radius: 5px;
             margin: 15px 0;
         }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
         .code-block {
             background-color: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -128,6 +135,12 @@
         .detail-item .empty {
             color: #6c757d;
             font-style: italic;
+        }
+        .detail-item .policy-note {
+            color: #e53e3e;
+            font-size: 12px;
+            font-style: italic;
+            margin-top: 5px;
         }
         .btn {
             background-color: #007bff;
@@ -408,6 +421,17 @@
                 };
 
                 userInfoDiv.innerHTML += `
+                    <div class="warning-box">
+                        <h4>⚠️ 重要提醒：微信政策調整</h4>
+                        <p>根據微信官方公告（2021年10月20日生效），為進一步規範開發者調用用戶信息相關接口，保障用戶合法權益：</p>
+                        <ul>
+                            <li><strong>性別信息</strong>：不再返回，統一顯示為"未知"</li>
+                            <li><strong>地區信息</strong>：不再返回，統一顯示為"未設置"</li>
+                            <li><strong>頭像和昵稱</strong>：仍然可以正常獲取</li>
+                        </ul>
+                        <p>這是微信官方的政策調整，不是系統問題。</p>
+                    </div>
+
                     <div class="user-info">
                         <div style="display: flex; align-items: center; margin-bottom: 20px;">
                             ${userInfo.headimgurl ? `<img src="${userInfo.headimgurl}" alt="頭像" onerror="this.style.display='none'">` : ''}
@@ -424,6 +448,7 @@
                                 <p><strong>OpenID:</strong> <span class="value">${userInfo.openid}</span></p>
                                 <p><strong>昵稱:</strong> <span class="value">${userInfo.nickname || '<span class="empty">未設置</span>'}</span></p>
                                 <p><strong>性別:</strong> <span class="value">${sexText}</span></p>
+                                ${userInfo.sex === 0 ? '<p class="policy-note">📝 微信政策調整，不再返回性別信息</p>' : ''}
                                 <p><strong>UnionID:</strong> <span class="value">${userInfo.unionid || '<span class="empty">未綁定開放平台</span>'}</span></p>
                             </div>
                             
@@ -432,6 +457,7 @@
                                 <p><strong>國家:</strong> <span class="value">${userInfo.country || '<span class="empty">未設置</span>'}</span></p>
                                 <p><strong>省份:</strong> <span class="value">${userInfo.province || '<span class="empty">未設置</span>'}</span></p>
                                 <p><strong>城市:</strong> <span class="value">${userInfo.city || '<span class="empty">未設置</span>'}</span></p>
+                                ${!userInfo.country && !userInfo.province && !userInfo.city ? '<p class="policy-note">📝 微信政策調整，不再返回地區信息</p>' : ''}
                             </div>
                             
                             <div class="detail-item">
