@@ -2,7 +2,7 @@ const axios = require('axios');
 
 // 微信配置
 const WECHAT_CONFIG = {
-  appId: process.env.WECHAT_APPID,
+  appid: process.env.WECHAT_APPID,
   secret: process.env.WECHAT_SECRET
 };
 
@@ -27,6 +27,8 @@ module.exports = async (req, res) => {
   try {
     const { code, state } = req.body;
 
+    console.log('收到授權請求:', { code, state, appid: WECHAT_CONFIG.appid });
+
     // 驗證參數
     if (!code) {
       return res.status(400).json({
@@ -35,19 +37,18 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!WECHAT_CONFIG.appId || !WECHAT_CONFIG.secret) {
+    if (!WECHAT_CONFIG.appid || !WECHAT_CONFIG.secret) {
       return res.status(500).json({
         success: false,
         message: '微信配置不完整'
       });
     }
 
-    console.log('處理授權請求:', { code, state, appId: WECHAT_CONFIG.appId });
-
-    // 第一步：使用 code 獲取 access_token 和 openid
+    // 第一步：通過 code 換取用戶授權 access_token
+    // 官方API：https://api.weixin.qq.com/sns/oauth2/access_token
     const tokenUrl = 'https://api.weixin.qq.com/sns/oauth2/access_token';
     const tokenParams = {
-      appid: WECHAT_CONFIG.appId,
+      appid: WECHAT_CONFIG.appid,
       secret: WECHAT_CONFIG.secret,
       code: code,
       grant_type: 'authorization_code'
@@ -70,51 +71,70 @@ module.exports = async (req, res) => {
       });
     }
 
-    const { access_token, openid, expires_in, refresh_token, scope } = tokenData;
+    const { 
+      access_token, 
+      expires_in, 
+      refresh_token, 
+      openid, 
+      scope, 
+      is_snapshotuser,
+      unionid 
+    } = tokenData;
 
-    // 第二步：使用 access_token 和 openid 獲取用戶信息
-    const userInfoUrl = 'https://api.weixin.qq.com/sns/userinfo';
-    const userInfoParams = {
-      access_token: access_token,
-      openid: openid,
-      lang: 'zh_CN'
-    };
+    // 第二步：如果 scope 是 snsapi_userinfo，則獲取用戶基本信息
+    let userInfo = null;
+    if (scope && scope.includes('snsapi_userinfo')) {
+      try {
+        console.log('開始獲取用戶基本信息...');
+        
+        // 官方API：https://api.weixin.qq.com/sns/userinfo
+        const userInfoUrl = 'https://api.weixin.qq.com/sns/userinfo';
+        const userInfoParams = {
+          access_token: access_token,
+          openid: openid,
+          lang: 'zh_CN'
+        };
 
-    console.log('請求用戶信息:', userInfoUrl, userInfoParams);
+        console.log('請求用戶信息:', userInfoUrl, userInfoParams);
 
-    const userInfoResponse = await axios.get(userInfoUrl, { params: userInfoParams });
-    const userInfo = userInfoResponse.data;
+        const userInfoResponse = await axios.get(userInfoUrl, { params: userInfoParams });
+        userInfo = userInfoResponse.data;
 
-    console.log('用戶信息響應:', userInfo);
+        console.log('用戶信息響應:', userInfo);
 
-    // 檢查是否有錯誤
-    if (userInfo.errcode) {
-      console.error('獲取用戶信息失敗:', userInfo);
-      return res.status(400).json({
-        success: false,
-        message: '獲取用戶信息失敗',
-        error: userInfo
-      });
+        // 檢查是否有錯誤
+        if (userInfo.errcode) {
+          console.error('獲取用戶信息失敗:', userInfo);
+          // 不返回錯誤，因為 access_token 已經獲取成功
+          userInfo = null;
+        }
+      } catch (error) {
+        console.error('獲取用戶信息異常:', error);
+        // 不返回錯誤，因為 access_token 已經獲取成功
+        userInfo = null;
+      }
     }
 
     // 返回成功結果
+    const result = {
+      access_token: access_token,
+      expires_in: expires_in,
+      refresh_token: refresh_token,
+      openid: openid,
+      scope: scope,
+      is_snapshotuser: is_snapshotuser,
+      unionid: unionid
+    };
+
+    // 如果獲取到用戶信息，合併到結果中
+    if (userInfo) {
+      Object.assign(result, userInfo);
+    }
+
     res.json({
       success: true,
-      data: {
-        openid: userInfo.openid,
-        nickname: userInfo.nickname,
-        sex: userInfo.sex,
-        province: userInfo.province,
-        city: userInfo.city,
-        country: userInfo.country,
-        headimgurl: userInfo.headimgurl,
-        privilege: userInfo.privilege,
-        unionid: userInfo.unionid,
-        access_token: access_token,
-        expires_in: expires_in,
-        refresh_token: refresh_token,
-        scope: scope
-      }
+      message: '授權成功',
+      data: result
     });
 
   } catch (error) {

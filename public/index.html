@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微信 OpenID 獲取系統</title>
+    <title>微信網頁授權系統 - 官方標準實現</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,13 +55,6 @@
         }
         .btn-success:hover {
             background-color: #218838;
-        }
-        .btn-warning {
-            background-color: #ffc107;
-            color: #212529;
-        }
-        .btn-warning:hover {
-            background-color: #e0a800;
         }
         .info-box {
             background-color: #e7f3ff;
@@ -130,125 +123,163 @@
             margin-top: 0;
             color: #007bff;
         }
+        .api-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .api-section h4 {
+            margin-top: 0;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>微信 OpenID 獲取系統</h1>
-            <p>完整的微信網頁授權解決方案</p>
+            <h1>微信網頁授權系統</h1>
+            <p>按照微信官方文檔實現的標準網頁授權系統</p>
         </div>
 
         <div class="step">
-            <h3>📋 系統狀態檢查</h3>
+            <h3>📋 系統概述</h3>
             <div class="info-box">
-                <p><strong>域名：</strong> openid.meditechmacao.com <span class="status status-success">已配置</span></p>
-                <p><strong>部署平台：</strong> Vercel <span class="status status-success">已部署</span></p>
-                <p><strong>HTTPS：</strong> 已啟用 <span class="status status-success">安全</span></p>
-                <p><strong>微信公眾號：</strong> wxe877716401fdb4c9 <span class="status status-warning">需配置</span></p>
+                <h4>微信網頁授權流程（官方標準）：</h4>
+                <ol>
+                    <li><strong>第一步：</strong>引導用戶進入授權頁面</li>
+                    <li><strong>第二步：</strong>接受用戶授權同意，在回調頁面中獲取code</li>
+                    <li><strong>第三步：</strong>通過code換取用戶授權access_token</li>
+                    <li><strong>第四步：</strong>通過用戶授權access_token和openid獲取用戶基本信息</li>
+                </ol>
             </div>
         </div>
 
         <div class="step">
-            <h3>🔧 第一步：微信公眾平台配置</h3>
+            <h3>🔧 第一步：構造授權鏈接</h3>
+            <div class="warning-box">
+                <h4>開發前必讀：</h4>
+                <ul>
+                    <li><strong>適用賬號：</strong>僅支持已認證的服務號</li>
+                    <li><strong>網頁授權域名：</strong>必須在公眾平台配置 openid.meditechmacao.com</li>
+                    <li><strong>HTTPS要求：</strong>redirect_uri 必須使用 https 協議</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>授權鏈接格式（官方標準）：</h4>
+                <div class="code-block">https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect</div>
+            </div>
+
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h4>授權頁面</h4>
+                    <p>構造標準的微信授權鏈接，包含完整的參數驗證</p>
+                    <a href="/oauth.html" class="btn">打開授權頁面</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>📱 第二步：授權回調處理</h3>
+            <div class="info-box">
+                <h4>授權成功後，微信會重定向到：</h4>
+                <div class="code-block">redirect_uri/?code=CODE&state=STATE</div>
+                <ul>
+                    <li><strong>code：</strong>作為換取access_token的票據，只能使用一次，5分鐘過期</li>
+                    <li><strong>state：</strong>防止越權行為的狀態參數</li>
+                </ul>
+            </div>
+
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h4>回調處理頁面</h4>
+                    <p>處理微信授權回調，獲取code參數</p>
+                    <a href="/callback.html" class="btn">查看回調頁面</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔑 第三步：後端API接口</h3>
+            <div class="api-section">
+                <h4>1. 獲取用戶授權信息接口</h4>
+                <p><strong>API：</strong> <code>POST /api/wechat/oauth2/access_token</code></p>
+                <p><strong>功能：</strong>通過 code 換取用戶授權 access_token</p>
+                <p><strong>官方接口：</strong> <code>https://api.weixin.qq.com/sns/oauth2/access_token</code></p>
+            </div>
+
+            <div class="api-section">
+                <h4>2. 刷新授權Token接口</h4>
+                <p><strong>API：</strong> <code>POST /api/wechat/oauth2/refresh_token</code></p>
+                <p><strong>功能：</strong>使用 refresh_token 刷新 access_token</p>
+                <p><strong>官方接口：</strong> <code>https://api.weixin.qq.com/sns/oauth2/refresh_token</code></p>
+            </div>
+
+            <div class="api-section">
+                <h4>3. 檢驗Token有效性接口</h4>
+                <p><strong>API：</strong> <code>POST /api/wechat/oauth2/auth</code></p>
+                <p><strong>功能：</strong>檢驗授權 access_token 是否有效</p>
+                <p><strong>官方接口：</strong> <code>https://api.weixin.qq.com/sns/auth</code></p>
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>👤 第四步：獲取用戶信息</h3>
+            <div class="info-box">
+                <h4>授權作用域說明：</h4>
+                <ul>
+                    <li><strong>snsapi_base：</strong>靜默授權，只能獲取用戶openid</li>
+                    <li><strong>snsapi_userinfo：</strong>彈出授權頁面，可獲取用戶基本信息（昵稱、頭像等）</li>
+                </ul>
+            </div>
+
             <div class="warning-box">
                 <h4>重要提醒：</h4>
                 <ul>
-                    <li>確保您的公眾號是<strong>服務號</strong>且<strong>已認證</strong></li>
-                    <li>訂閱號功能受限，可能無法正常使用網頁授權</li>
-                </ul>
-            </div>
-            
-            <h4>1.1 設置網頁授權域名</h4>
-            <ol>
-                <li>登錄微信公眾平台</li>
-                <li>進入「設置」→「公眾號設置」→「功能設置」</li>
-                <li>在「網頁授權域名」中填入：<code>openid.meditechmacao.com</code></li>
-                <li>按照指示上傳驗證文件到網站根目錄</li>
-            </ol>
-
-            <h4>1.2 創建自定義菜單</h4>
-            <ol>
-                <li>進入「自定義菜單」設置頁面</li>
-                <li>添加新菜單項，選擇「跳轉網頁」類型</li>
-                <li>使用下面的工具生成授權 URL</li>
-            </ol>
-        </div>
-
-        <div class="step">
-            <h3>🛠️ 第二步：使用工具生成授權 URL</h3>
-            <div class="tools-grid">
-                <div class="tool-card">
-                    <h4>授權 URL 生成器</h4>
-                    <p>生成標準的微信授權 URL，包含正確的 URL 編碼</p>
-                    <a href="/auth-url-generator.html" class="btn">打開生成器</a>
-                </div>
-                <div class="tool-card">
-                    <h4>URL 編碼測試</h4>
-                    <p>測試不同的 URL 編碼方式，確保格式正確</p>
-                    <a href="/url-encoding-test.html" class="btn">打開測試工具</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="step">
-            <h3>📱 第三步：測試授權流程</h3>
-            <div class="info-box">
-                <h4>標準授權 URL 格式：</h4>
-                <div class="code-block">https://open.weixin.qq.com/connect/oauth2/authorize?appid=YOUR_APPID&redirect_uri=YOUR_REDIRECT_URL&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect</div>
-            </div>
-
-            <h4>測試步驟：</h4>
-            <ol>
-                <li>使用工具生成授權 URL</li>
-                <li>將 URL 設置到微信公眾平台自定義菜單</li>
-                <li><strong>在手機微信中點擊菜單</strong>（重要：不要用電腦瀏覽器）</li>
-                <li>確認授權後會跳轉到 callback 頁面</li>
-                <li>查看獲取的用戶信息</li>
-            </ol>
-
-            <div class="warning-box">
-                <h4>常見問題：</h4>
-                <ul>
-                    <li><strong>404 錯誤：</strong>檢查網頁授權域名是否正確配置</li>
-                    <li><strong>空白頁面：</strong>確保 callback 頁面能正常訪問</li>
-                    <li><strong>授權失敗：</strong>確認公眾號類型和認證狀態</li>
+                    <li>由於服務號的 secret 和獲取到的 access_token 安全級別都非常高，必須只保存在服務器</li>
+                    <li>不允許傳給客戶端</li>
+                    <li>後續刷新access_token、通過access_token獲取用戶信息等步驟，也必須從服務器發起</li>
                 </ul>
             </div>
         </div>
 
         <div class="step">
-            <h3>🔍 第四步：調試和監控</h3>
-            <div class="tools-grid">
-                <div class="tool-card">
-                    <h4>授權回調處理</h4>
-                    <p>處理微信授權回調，獲取用戶信息</p>
-                    <a href="/callback.html" class="btn">查看回調頁面</a>
-                </div>
-                <div class="tool-card">
-                    <h4>環境變量檢查</h4>
-                    <p>檢查服務器配置是否正確</p>
-                    <a href="/api/debug/env" class="btn">檢查配置</a>
-                </div>
+            <h3>🚀 測試流程</h3>
+            <div class="success-box">
+                <h4>完整測試步驟：</h4>
+                <ol>
+                    <li>確保網頁授權域名已配置：<code>openid.meditechmacao.com</code></li>
+                    <li>在微信公眾平台設置自定義菜單，使用授權鏈接</li>
+                    <li><strong>在手機微信中點擊菜單</strong>（重要：不要用電腦瀏覽器）</li>
+                    <li>確認授權後會跳轉到回調頁面</li>
+                    <li>查看獲取的用戶信息</li>
+                </ol>
             </div>
         </div>
 
         <div class="step">
             <h3>📚 技術文檔</h3>
             <div class="info-box">
-                <h4>API 端點：</h4>
+                <h4>重要文件：</h4>
                 <ul>
-                    <li><strong>授權處理：</strong> <code>POST /api/wechat/process-auth</code></li>
-                    <li><strong>環境檢查：</strong> <code>GET /api/debug/env</code></li>
+                    <li><code>public/oauth.html</code> - 授權鏈接構造頁面</li>
+                    <li><code>public/callback.html</code> - 授權回調處理頁面</li>
+                    <li><code>api/wechat/oauth2/access_token.js</code> - 獲取授權Token API</li>
+                    <li><code>api/wechat/oauth2/refresh_token.js</code> - 刷新Token API</li>
+                    <li><code>api/wechat/oauth2/auth.js</code> - Token驗證 API</li>
                 </ul>
             </div>
 
-            <h4>重要文件：</h4>
-            <ul>
-                <li><code>public/callback.html</code> - 授權回調處理頁面</li>
-                <li><code>api/wechat/process-auth.js</code> - 後端授權處理 API</li>
-                <li><code>public/auth-url-generator.html</code> - 授權 URL 生成器</li>
-            </ul>
+            <div class="info-box">
+                <h4>環境變量配置：</h4>
+                <ul>
+                    <li><code>WECHAT_APPID</code> - 微信公眾號 AppID</li>
+                    <li><code>WECHAT_SECRET</code> - 微信公眾號 AppSecret</li>
+                    <li><code>BASE_URL</code> - 網站基礎URL</li>
+                </ul>
+            </div>
         </div>
 
         <div class="step">
@@ -258,8 +289,9 @@
                 <ul>
                     <li>✅ 域名已配置並可訪問</li>
                     <li>✅ HTTPS 已啟用</li>
-                    <li>✅ 微信公眾號 AppID 已設置</li>
+                    <li>✅ 微信公眾號是已認證的服務號</li>
                     <li>✅ 網頁授權域名已配置</li>
+                    <li>✅ 環境變量已設置</li>
                     <li>✅ 自定義菜單已設置</li>
                     <li>✅ 在手機微信中測試通過</li>
                 </ul>

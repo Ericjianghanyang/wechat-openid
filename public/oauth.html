@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信網頁授權</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .auth-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>微信網頁授權</h1>
+            <p>按照微信官方文檔實現的標準網頁授權系統</p>
+        </div>
+
+        <div class="auth-section">
+            <h3>第一步：構造授權鏈接</h3>
+            <div class="info-box">
+                <h4>授權鏈接格式（官方標準）：</h4>
+                <div class="code-block">https://open.weixin.qq.com/connect/oauth2/authorize?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect</div>
+            </div>
+
+            <div class="form-group">
+                <label for="appId">AppID：</label>
+                <input type="text" id="appId" value="wxe877716401fdb4c9" placeholder="請輸入您的微信公眾號 AppID">
+            </div>
+
+            <div class="form-group">
+                <label for="redirectUri">重定向地址：</label>
+                <input type="text" id="redirectUri" value="https://openid.meditechmacao.com/callback.html" placeholder="授權後重定向的回調鏈接地址">
+            </div>
+
+            <div class="form-group">
+                <label for="scope">授權作用域：</label>
+                <select id="scope">
+                    <option value="snsapi_base">snsapi_base（靜默授權，只能獲取用戶openid）</option>
+                    <option value="snsapi_userinfo" selected>snsapi_userinfo（彈出授權頁面，可獲取用戶基本信息）</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="state">狀態參數（可選）：</label>
+                <input type="text" id="state" value="STATE123" placeholder="重定向後會帶上state參數，最多128字節">
+            </div>
+
+            <button onclick="generateAuthUrl()" class="btn">生成授權鏈接</button>
+            <div id="authUrlResult"></div>
+        </div>
+
+        <div class="auth-section">
+            <h3>第二步：發起跳轉</h3>
+            <div class="warning-box">
+                <h4>重要提醒：</h4>
+                <ul>
+                    <li><strong>必須在微信客戶端中訪問</strong></li>
+                    <li><strong>必須配置網頁授權域名</strong>：openid.meditechmacao.com</li>
+                    <li><strong>必須是已認證的服務號</strong></li>
+                    <li><strong>redirect_uri 必須使用 https</strong></li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>跳轉方式：</h4>
+                <ul>
+                    <li>在自定義菜單中設置授權鏈接</li>
+                    <li>在網頁中使用 JavaScript 跳轉</li>
+                    <li>使用 HTML 鏈接跳轉</li>
+                </ul>
+            </div>
+
+            <button onclick="redirectToAuth()" class="btn btn-success">立即跳轉到授權頁面</button>
+        </div>
+
+        <div class="auth-section">
+            <h3>第三步：授權流程說明</h3>
+            <div class="info-box">
+                <h4>snsapi_base 授權：</h4>
+                <ul>
+                    <li>客戶端默認同意</li>
+                    <li>靜默授權並自動跳轉到回調頁</li>
+                    <li>僅能獲取用戶 openid</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h4>snsapi_userinfo 授權：</h4>
+                <ul>
+                    <li>已關注服務號的用戶：靜默授權</li>
+                    <li>其他情況：需要用戶手動同意</li>
+                    <li>可獲取用戶基本信息（昵稱、頭像等）</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="auth-section">
+            <h3>第四步：錯誤處理</h3>
+            <div class="info-box">
+                <h4>常見錯誤碼：</h4>
+                <ul>
+                    <li><strong>10003</strong>：redirect_uri域名與後台配置不一致</li>
+                    <li><strong>10004</strong>：此服務號被封禁</li>
+                    <li><strong>10005</strong>：此服務號並沒有這些scope的權限</li>
+                    <li><strong>10012</strong>：appid不能為空</li>
+                    <li><strong>10013</strong>：state不能為空</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 生成授權鏈接
+        function generateAuthUrl() {
+            const appId = document.getElementById('appId').value.trim();
+            const redirectUri = document.getElementById('redirectUri').value.trim();
+            const scope = document.getElementById('scope').value;
+            const state = document.getElementById('state').value.trim();
+            const resultDiv = document.getElementById('authUrlResult');
+
+            // 驗證輸入
+            if (!appId) {
+                resultDiv.innerHTML = '<div class="warning-box">請輸入 AppID</div>';
+                return;
+            }
+
+            if (!redirectUri) {
+                resultDiv.innerHTML = '<div class="warning-box">請輸入重定向地址</div>';
+                return;
+            }
+
+            // 檢查 AppID 格式
+            const appIdPattern = /^wx[a-f0-9]{16}$/;
+            if (!appIdPattern.test(appId)) {
+                resultDiv.innerHTML = '<div class="warning-box">AppID 格式不正確，應該是以 wx 開頭的 18 位字符串</div>';
+                return;
+            }
+
+            // 檢查 redirect_uri 是否為 https
+            if (!redirectUri.startsWith('https://')) {
+                resultDiv.innerHTML = '<div class="warning-box">重定向地址必須使用 https 協議</div>';
+                return;
+            }
+
+            // 編碼重定向地址
+            const encodedRedirectUri = encodeURIComponent(redirectUri);
+
+            // 構建授權鏈接
+            let authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scope}`;
+
+            if (state) {
+                authUrl += `&state=${encodeURIComponent(state)}`;
+            }
+
+            authUrl += '#wechat_redirect';
+
+            // 顯示結果
+            resultDiv.innerHTML = `
+                <div class="info-box">
+                    <h4>生成的授權鏈接：</h4>
+                    <div class="code-block">${authUrl}</div>
+                    <p><strong>注意：</strong>此鏈接必須在微信客戶端中打開才能正常工作</p>
+                </div>
+            `;
+
+            // 保存到全局變量供跳轉使用
+            window.generatedAuthUrl = authUrl;
+        }
+
+        // 跳轉到授權頁面
+        function redirectToAuth() {
+            if (!window.generatedAuthUrl) {
+                alert('請先生成授權鏈接');
+                return;
+            }
+
+            // 檢查是否在微信客戶端
+            const isWechat = /MicroMessenger/i.test(navigator.userAgent);
+            if (!isWechat) {
+                alert('此功能需要在微信客戶端中使用');
+                return;
+            }
+
+            // 跳轉到授權頁面
+            window.location.href = window.generatedAuthUrl;
+        }
+
+        // 頁面加載時自動生成授權鏈接
+        document.addEventListener('DOMContentLoaded', generateAuthUrl);
+    </script>
+</body>
+</html> 
