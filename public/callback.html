@@ -161,6 +161,63 @@
             overflow-x: auto;
             font-size: 12px;
         }
+        .json-output {
+            background-color: #2d3748;
+            border: 1px solid #4a5568;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .json-output h4 {
+            margin-top: 0;
+            color: #e2e8f0;
+            font-size: 16px;
+        }
+        .json-output .description {
+            color: #a0aec0;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .json-output pre {
+            background-color: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
+            border: 1px solid #4a5568;
+        }
+        .copy-btn {
+            background-color: #38a169;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .copy-btn:hover {
+            background-color: #2f855a;
+        }
+        .api-section {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .api-section h4 {
+            margin-top: 0;
+            color: #c53030;
+        }
+        .api-section .endpoint {
+            background-color: #f7fafc;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -213,6 +270,23 @@
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 複製到剪貼板
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('已複製到剪貼板！');
+            }, function(err) {
+                console.error('複製失敗: ', err);
+                // 降級方案
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('已複製到剪貼板！');
+            });
         }
 
         // 處理授權回調
@@ -320,6 +394,19 @@
                     ? userInfo.privilege.join(', ') 
                     : userInfo.privilege || '無';
 
+                // 構建標準的微信用戶信息JSON格式
+                const standardUserInfo = {
+                    openid: userInfo.openid,
+                    nickname: userInfo.nickname || '',
+                    sex: userInfo.sex || 0,
+                    province: userInfo.province || '',
+                    city: userInfo.city || '',
+                    country: userInfo.country || '',
+                    headimgurl: userInfo.headimgurl || '',
+                    privilege: userInfo.privilege || [],
+                    unionid: userInfo.unionid || ''
+                };
+
                 userInfoDiv.innerHTML += `
                     <div class="user-info">
                         <div style="display: flex; align-items: center; margin-bottom: 20px;">
@@ -361,8 +448,38 @@
                             </div>
                         </div>
                         
+                        <div class="json-output">
+                            <h4>📋 標準微信用戶信息 JSON 格式</h4>
+                            <div class="description">
+                                按照微信官方文檔格式的用戶信息，可直接用於開發。點擊下方按鈕複製到剪貼板。
+                            </div>
+                            <pre id="standardJson">${JSON.stringify(standardUserInfo, null, 2)}</pre>
+                            <button class="copy-btn" onclick="copyToClipboard(document.getElementById('standardJson').textContent)">
+                                📋 複製標準格式 JSON
+                            </button>
+                        </div>
+
+                        <div class="api-section">
+                            <h4>🔗 API 接口信息</h4>
+                            <p><strong>後端接口：</strong></p>
+                            <div class="endpoint">POST /api/wechat/oauth2/access_token</div>
+                            <p><strong>請求參數：</strong></p>
+                            <div class="code-block">{
+  "code": "授權碼",
+  "state": "狀態參數"
+}</div>
+                            <p><strong>返回格式：</strong></p>
+                            <div class="code-block">{
+  "success": true,
+  "message": "授權成功",
+  "data": {
+    // 用戶信息字段
+  }
+}</div>
+                        </div>
+                        
                         <div class="raw-data">
-                            <h4>原始數據（JSON格式）</h4>
+                            <h4>🔍 完整響應數據（包含所有字段）</h4>
                             <pre>${JSON.stringify(userInfo, null, 2)}</pre>
                         </div>
                     </div>
