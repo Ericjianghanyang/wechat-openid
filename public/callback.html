@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信授權回調處理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .user-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .user-info img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .user-info h3 {
+            margin-top: 0;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信授權處理</h1>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>正在處理微信授權...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <h3>授權失敗</h3>
+            <p id="errorMessage"></p>
+        </div>
+
+        <div id="success" class="success" style="display: none;">
+            <h3>授權成功</h3>
+            <div id="userInfoDisplay"></div>
+        </div>
+
+        <div id="debug" class="debug-info" style="display: none;">
+            <h4>調試信息：</h4>
+            <div id="debugContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // 獲取URL參數
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 顯示調試信息
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debug');
+            const debugContent = document.getElementById('debugContent');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            let debugText = 'URL 參數：\n';
+            for (let [key, value] of urlParams) {
+                debugText += `${key}: ${value}\n`;
+            }
+            debugText += `\n完整 URL：\n${window.location.href}`;
+            
+            debugContent.textContent = debugText;
+            debugDiv.style.display = 'block';
+        }
+
+        // 處理授權回調
+        async function handleAuthCallback() {
+            const code = getUrlParameter('code');
+            const state = getUrlParameter('state');
+            const error = getUrlParameter('error');
+
+            // 顯示調試信息
+            showDebugInfo();
+
+            // 檢查是否有錯誤
+            if (error) {
+                showError('授權被用戶取消或發生錯誤: ' + error);
+                return;
+            }
+
+            // 檢查是否有授權碼
+            if (!code) {
+                showError('未收到授權碼，請重新授權');
+                return;
+            }
+
+            try {
+                console.log('收到授權碼:', code);
+                console.log('狀態參數:', state);
+
+                // 將code發送到後端處理
+                const response = await fetch('/api/wechat/process-auth', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        code: code,
+                        state: state 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || '處理授權失敗');
+                }
+
+                // 顯示用戶信息
+                showUserInfo(data.data);
+
+            } catch (error) {
+                console.error('處理授權回調失敗:', error);
+                showError('授權處理失敗: ' + error.message);
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function showUserInfo(userInfo) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+            
+            const userInfoDiv = document.getElementById('userInfoDisplay');
+            userInfoDiv.innerHTML = `
+                <div class="user-info">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <img src="${userInfo.headimgurl}" alt="頭像" onerror="this.style.display='none'">
+                        <div>
+                            <h3>歡迎, ${userInfo.nickname}</h3>
+                            <p>OpenID: ${userInfo.openid}</p>
+                            ${userInfo.unionid ? `<p>UnionID: ${userInfo.unionid}</p>` : ''}
+                        </div>
+                    </div>
+                    <div>
+                        <p><strong>性別:</strong> ${userInfo.sex === 1 ? '男' : userInfo.sex === 2 ? '女' : '未知'}</p>
+                        <p><strong>地區:</strong> ${userInfo.country} ${userInfo.province} ${userInfo.city}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 頁面加載時開始處理
+        document.addEventListener('DOMContentLoaded', handleAuthCallback);
+    </script>
+</body>
+</html> 

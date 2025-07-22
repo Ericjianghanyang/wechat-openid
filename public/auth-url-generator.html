@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信授權 URL 生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .instructions {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>微信授權 URL 生成器</h1>
+        
+        <div class="instructions">
+            <h3>使用說明</h3>
+            <ol>
+                <li>填入您的微信公眾號 AppID</li>
+                <li>設置授權完成後的跳轉地址</li>
+                <li>選擇授權範圍</li>
+                <li>生成授權 URL</li>
+                <li>將生成的 URL 設置到微信公眾平台自定義菜單</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>1. 基本信息配置</h3>
+            <div class="form-group">
+                <label for="appId">微信 AppID：</label>
+                <input type="text" id="appId" value="wxe877716401fdb4c9" placeholder="請輸入您的微信公眾號 AppID">
+            </div>
+            <div class="form-group">
+                <label for="redirectUri">跳轉地址：</label>
+                <input type="text" id="redirectUri" value="https://openid.meditechmacao.com/callback" placeholder="授權完成後的跳轉地址">
+            </div>
+            <div class="form-group">
+                <label for="scope">授權範圍：</label>
+                <select id="scope">
+                    <option value="snsapi_userinfo">snsapi_userinfo（獲取用戶基本信息）</option>
+                    <option value="snsapi_base">snsapi_base（僅獲取 OpenID）</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="state">狀態參數（可選）：</label>
+                <input type="text" id="state" placeholder="可選的狀態參數，用於防止 CSRF 攻擊">
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>2. 生成授權 URL</h3>
+            <button onclick="generateAuthUrl()" class="btn">生成授權 URL</button>
+            <div id="authUrlResult"></div>
+        </div>
+
+        <div class="section">
+            <h3>3. 設置步驟</h3>
+            <div class="info">
+                <h4>在微信公眾平台設置自定義菜單：</h4>
+                <ol>
+                    <li>登錄微信公眾平台</li>
+                    <li>進入 "自定義菜單"</li>
+                    <li>點擊 "添加菜單"</li>
+                    <li>菜單名稱：輸入您想要的名稱（如 "獲取OpenID"）</li>
+                    <li>菜單類型：選擇 "跳轉網頁"</li>
+                    <li>菜單鏈接：貼上上面生成的授權 URL</li>
+                    <li>點擊 "保存並發布"</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>4. 測試流程</h3>
+            <div class="info">
+                <h4>完整的授權流程：</h4>
+                <ol>
+                    <li>用戶在微信中點擊自定義菜單</li>
+                    <li>跳轉到微信授權頁面</li>
+                    <li>用戶點擊 "確認登錄"</li>
+                    <li>微信將用戶重定向到您的 callback 頁面，並帶上 code 參數</li>
+                    <li>您的網站使用 code 獲取用戶的 OpenID 和基本信息</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>5. 重要提醒</h3>
+            <div class="info">
+                <ul>
+                    <li><strong>必須在手機微信內測試</strong>，不要用電腦瀏覽器直接打開授權 URL</li>
+                    <li><strong>確保網頁授權域名已配置</strong>：openid.meditechmacao.com</li>
+                    <li><strong>確保公眾號是服務號且已認證</strong></li>
+                    <li><strong>callback 頁面必須能正常訪問</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateAuthUrl() {
+            const appId = document.getElementById('appId').value.trim();
+            const redirectUri = document.getElementById('redirectUri').value.trim();
+            const scope = document.getElementById('scope').value;
+            const state = document.getElementById('state').value.trim();
+            const resultDiv = document.getElementById('authUrlResult');
+
+            // 驗證輸入
+            if (!appId) {
+                resultDiv.innerHTML = '<div class="error">請輸入 AppID</div>';
+                return;
+            }
+
+            if (!redirectUri) {
+                resultDiv.innerHTML = '<div class="error">請輸入跳轉地址</div>';
+                return;
+            }
+
+            // 檢查 AppID 格式
+            const appIdPattern = /^wx[a-f0-9]{16}$/;
+            if (!appIdPattern.test(appId)) {
+                resultDiv.innerHTML = '<div class="error">AppID 格式不正確，應該是以 wx 開頭的 18 位字符串</div>';
+                return;
+            }
+
+            // 編碼跳轉地址
+            const encodedRedirectUri = encodeURIComponent(redirectUri);
+
+            // 構建授權 URL
+            let authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appId}&redirect_uri=${encodedRedirectUri}&response_type=code&scope=${scope}`;
+
+            if (state) {
+                authUrl += `&state=${encodeURIComponent(state)}`;
+            }
+
+            authUrl += '#wechat_redirect';
+
+            // 顯示結果
+            resultDiv.innerHTML = `
+                <div class="success">
+                    <h4>生成的授權 URL：</h4>
+                    <div class="code-block">${authUrl}</div>
+                    <p><a href="${authUrl}" target="_blank" class="btn">在瀏覽器中測試（僅用於檢查格式）</a></p>
+                    <p><strong>注意：</strong>實際測試請在手機微信中點擊自定義菜單</p>
+                </div>
+            `;
+        }
+
+        // 頁面加載時自動生成一個 URL
+        document.addEventListener('DOMContentLoaded', generateAuthUrl);
+    </script>
+</body>
+</html> 
