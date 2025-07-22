@@ -99,6 +99,36 @@
         .user-info h3 {
             margin-top: 0;
         }
+        .user-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .detail-item {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .detail-item h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+        .detail-item p {
+            margin: 0;
+            font-weight: bold;
+            color: #212529;
+        }
+        .detail-item .value {
+            color: #007bff;
+            word-break: break-all;
+        }
+        .detail-item .empty {
+            color: #6c757d;
+            font-style: italic;
+        }
         .btn {
             background-color: #007bff;
             color: white;
@@ -112,6 +142,24 @@
         }
         .btn:hover {
             background-color: #0056b3;
+        }
+        .raw-data {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .raw-data h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .raw-data pre {
+            background-color: white;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -264,20 +312,58 @@
             const userInfoDiv = document.getElementById('userInfoDisplay');
             
             if (userInfo && userInfo.openid) {
+                // 格式化性別顯示
+                const sexText = userInfo.sex === 1 ? '男性' : userInfo.sex === 2 ? '女性' : '未知';
+                
+                // 格式化特權信息
+                const privilegeText = userInfo.privilege && Array.isArray(userInfo.privilege) 
+                    ? userInfo.privilege.join(', ') 
+                    : userInfo.privilege || '無';
+
                 userInfoDiv.innerHTML += `
                     <div class="user-info">
-                        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; margin-bottom: 20px;">
                             ${userInfo.headimgurl ? `<img src="${userInfo.headimgurl}" alt="頭像" onerror="this.style.display='none'">` : ''}
                             <div>
                                 <h3>用戶信息獲取成功</h3>
+                                <p><strong>昵稱:</strong> ${userInfo.nickname || '未設置'}</p>
                                 <p><strong>OpenID:</strong> ${userInfo.openid}</p>
-                                ${userInfo.nickname ? `<p><strong>昵稱:</strong> ${userInfo.nickname}</p>` : ''}
-                                ${userInfo.unionid ? `<p><strong>UnionID:</strong> ${userInfo.unionid}</p>` : ''}
                             </div>
                         </div>
-                        <div>
-                            <p><strong>授權範圍:</strong> ${userInfo.scope || '未知'}</p>
-                            <p><strong>Token有效期:</strong> ${userInfo.expires_in || '未知'} 秒</p>
+                        
+                        <div class="user-details">
+                            <div class="detail-item">
+                                <h4>基本信息</h4>
+                                <p><strong>OpenID:</strong> <span class="value">${userInfo.openid}</span></p>
+                                <p><strong>昵稱:</strong> <span class="value">${userInfo.nickname || '<span class="empty">未設置</span>'}</span></p>
+                                <p><strong>性別:</strong> <span class="value">${sexText}</span></p>
+                                <p><strong>UnionID:</strong> <span class="value">${userInfo.unionid || '<span class="empty">未綁定開放平台</span>'}</span></p>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <h4>地區信息</h4>
+                                <p><strong>國家:</strong> <span class="value">${userInfo.country || '<span class="empty">未設置</span>'}</span></p>
+                                <p><strong>省份:</strong> <span class="value">${userInfo.province || '<span class="empty">未設置</span>'}</span></p>
+                                <p><strong>城市:</strong> <span class="value">${userInfo.city || '<span class="empty">未設置</span>'}</span></p>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <h4>授權信息</h4>
+                                <p><strong>授權範圍:</strong> <span class="value">${userInfo.scope || '未知'}</span></p>
+                                <p><strong>Token有效期:</strong> <span class="value">${userInfo.expires_in || '未知'} 秒</span></p>
+                                <p><strong>特權信息:</strong> <span class="value">${privilegeText}</span></p>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <h4>頭像信息</h4>
+                                <p><strong>頭像URL:</strong> <span class="value">${userInfo.headimgurl || '<span class="empty">未設置</span>'}</span></p>
+                                ${userInfo.headimgurl ? `<p><strong>頭像預覽:</strong></p><img src="${userInfo.headimgurl}" alt="頭像" style="width: 60px; height: 60px; border-radius: 50%; margin-top: 5px;" onerror="this.style.display='none'">` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="raw-data">
+                            <h4>原始數據（JSON格式）</h4>
+                            <pre>${JSON.stringify(userInfo, null, 2)}</pre>
                         </div>
                     </div>
                 `;
